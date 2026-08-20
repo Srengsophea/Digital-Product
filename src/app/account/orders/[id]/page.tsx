@@ -10,7 +10,7 @@ import {
   KeyRound,
 } from "lucide-react";
 import { db, initDb, formatMoney } from "@/lib/db";
-import { requireUser } from "@/lib/auth";
+import { getSession } from "@/lib/auth";
 import { CopyKeyButton } from "@/components/CopyKeyButton";
 
 initDb();
@@ -25,27 +25,29 @@ async function OrderPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  let session;
-  try {
-    session = await requireUser();
-  } catch {
+  const session = await getSession();
+  if (!session) {
     redirect("/login?next=/account");
   }
 
   const { id } = await params;
 
-  const order = db
-    .prepare("SELECT * FROM orders WHERE id = ? AND user_id = ?")
-    .get(id, session.sub) as
-    | {
-        id: string;
-        email: string;
-        name: string;
-        total_cents: number;
-        status: string;
-        created_at: string;
-      }
-    | undefined;
+  let order: {
+    id: string;
+    email: string;
+    name: string;
+    total_cents: number;
+    status: string;
+    created_at: string;
+  } | undefined;
+
+  try {
+    order = db
+      .prepare("SELECT * FROM orders WHERE id = ? AND (user_id = ? OR email = ?)")
+      .get(id, session.sub, session.email) as typeof order;
+  } catch {
+    // Database fallback
+  }
 
   if (!order) notFound();
 

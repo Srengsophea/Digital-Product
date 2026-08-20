@@ -4,7 +4,7 @@ function getBaseUrl(req: Request): string {
   const host = req.headers.get("x-forwarded-host") || req.headers.get("host");
   const proto = req.headers.get("x-forwarded-proto") || (host?.includes("localhost") ? "http" : "https");
   if (host) return `${proto}://${host}`;
-  return process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  return process.env.NEXT_PUBLIC_APP_URL || "https://www.digital-product.site";
 }
 
 export async function GET(req: Request) {

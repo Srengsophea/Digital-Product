@@ -16,6 +16,17 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.user) {
+          router.replace(d.user.role === "admin" ? "/admin" : next);
+        }
+      })
+      .catch(() => {});
+  }, [next, router]);
+
+  useEffect(() => {
     const err = searchParams.get("error");
     if (err === "missing_google_credentials") {
       setError("To activate real Google OAuth: Please add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to .env.local.");

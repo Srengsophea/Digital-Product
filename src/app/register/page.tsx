@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Loader2, Mail, Lock, User, Sparkles, UserPlus } from "lucide-react";
@@ -14,6 +14,17 @@ export default function RegisterPage() {
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.user) {
+          router.replace(d.user.role === "admin" ? "/admin" : "/account");
+        }
+      })
+      .catch(() => {});
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

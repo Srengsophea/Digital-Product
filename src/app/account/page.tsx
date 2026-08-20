@@ -8,8 +8,8 @@ import {
   ShoppingBag,
   CreditCard,
 } from "lucide-react";
-import { db, initDb, formatMoney } from "@/lib/db";
-import { requireUser, getUserById } from "@/lib/auth";
+import { db, initDb, formatMoney, type UserRole, type UserRow } from "@/lib/db";
+import { getSession, getUserById } from "@/lib/auth";
 import { CopyKeyButton } from "@/components/CopyKeyButton";
 import { QRCodeSVG } from "@/components/QRCode";
 
@@ -21,51 +21,74 @@ export const metadata = {
 };
 
 async function AccountPage() {
-  let session;
-  try {
-    session = await requireUser();
-  } catch {
+  const session = await getSession();
+  if (!session) {
     redirect("/login?next=/account");
   }
 
-  const user = await getUserById(session.sub);
-  if (!user) redirect("/login");
+  let dbUser: UserRow | undefined;
+  try {
+    dbUser = await getUserById(session.sub);
+  } catch {
+    // Database fallback
+  }
 
-  const orders = db
-    .prepare(
-      `SELECT o.id, o.total_cents, o.status, o.created_at,
-              COUNT(oi.id) AS item_count
-       FROM orders o LEFT JOIN order_items oi ON oi.order_id = o.id
-       WHERE o.user_id = ?
-       GROUP BY o.id
-       ORDER BY o.created_at DESC
-       LIMIT 10`
-    )
-    .all(session.sub) as {
+  const user: UserRow = dbUser || {
+    id: session.sub,
+    email: session.email,
+    name: session.name,
+    role: (session.role === "admin" ? "admin" : "customer") as UserRole,
+    password_hash: "",
+    created_at: new Date().toISOString(),
+  };
+
+  let orders: {
     id: string;
     total_cents: number;
     status: string;
     created_at: string;
     item_count: number;
-  }[];
+  }[] = [];
 
-  const licenses = db
-    .prepare(
-      `SELECT l.id, l.key, l.qr_secret, l.product_id, p.title AS product_title, p.image AS product_image
-       FROM licenses l JOIN products p ON p.id = l.product_id
-       JOIN orders o ON o.id = l.order_id
-       WHERE o.user_id = ?
-       ORDER BY l.created_at DESC
-       LIMIT 8`
-    )
-    .all(session.sub) as {
+  try {
+    orders = db
+      .prepare(
+        `SELECT o.id, o.total_cents, o.status, o.created_at,
+                COUNT(oi.id) AS item_count
+         FROM orders o LEFT JOIN order_items oi ON oi.order_id = o.id
+         WHERE o.user_id = ?
+         GROUP BY o.id
+         ORDER BY o.created_at DESC
+         LIMIT 10`
+      )
+      .all(session.sub) as typeof orders;
+  } catch {
+    orders = [];
+  }
+
+  let licenses: {
     id: string;
     key: string;
     qr_secret: string;
     product_id: string;
     product_title: string;
     product_image: string;
-  }[];
+  }[] = [];
+
+  try {
+    licenses = db
+      .prepare(
+        `SELECT l.id, l.key, l.qr_secret, l.product_id, p.title AS product_title, p.image AS product_image
+         FROM licenses l JOIN products p ON p.id = l.product_id
+         JOIN orders o ON o.id = l.order_id
+         WHERE o.user_id = ?
+         ORDER BY l.created_at DESC
+         LIMIT 8`
+      )
+      .all(session.sub) as typeof licenses;
+  } catch {
+    licenses = [];
+  }
 
   const statCards = [
     { label: "Orders", value: String(orders.length), icon: ShoppingBag, color: "text-violet-700 bg-violet-500/10 dark:text-violet-300" },
