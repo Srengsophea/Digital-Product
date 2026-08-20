@@ -459,4 +459,135 @@ body {
   border-radius: 50%;
   filter: blur(90px);
   pointer-events: none;
+  will-change: transform;
+}
+
+/* Live Aurora Background Keyframes */
+@keyframes aurora-float-1 {
+  0%, 100% {
+    transform: translate3d(0px, 0px, 0) scale(1) rotate(0deg);
+  }
+  33% {
+    transform: translate3d(60px, -80px, 0) scale(1.18) rotate(120deg);
+  }
+  66% {
+    transform: translate3d(-50px, 40px, 0) scale(0.92) rotate(240deg);
+  }
+}
+
+@keyframes aurora-float-2 {
+  0%, 100% {
+    transform: translate3d(0px, 0px, 0) scale(1) rotate(0deg);
+  }
+  33% {
+    transform: translate3d(-70px, 60px, 0) scale(1.15) rotate(-120deg);
+  }
+  66% {
+    transform: translate3d(40px, -60px, 0) scale(0.9) rotate(-240deg);
+  }
+}
+
+@keyframes aurora-float-3 {
+  0%, 100% {
+    transform: translate3d(0px, 0px, 0) scale(1) rotate(0deg);
+  }
+  50% {
+    transform: translate3d(80px, 50px, 0) scale(1.22) rotate(180deg);
+  }
+}
+
+@keyframes aurora-float-4 {
+  0%, 100% {
+    transform: translate3d(0px, 0px, 0) scale(0.95);
+  }
+  50% {
+    transform: translate3d(-40px, -70px, 0) scale(1.15);
+  }
+}
+
+.animate-aurora-1 {
+  animation: aurora-float-1 22s ease-in-out infinite;
+}
+.animate-aurora-2 {
+  animation: aurora-float-2 26s ease-in-out infinite;
+}
+.animate-aurora-3 {
+  animation: aurora-float-3 20s ease-in-out infinite;
+}
+.animate-aurora-4 {
+  animation: aurora-float-4 18s ease-in-out infinite;
+}
+
+/* Laser Light Beam Sweep Keyframes */
+@keyframes beam-sweep {
+  0% {
+    transform: translateY(-100%) rotate(35deg);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.7;
+  }
+  80% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(220%) rotate(35deg);
+    opacity: 0;
+  }
+}
+
+@keyframes spin-shape {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.1);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+@keyframes float-particle {
+  0% {
+    transform: translateY(0px) scale(0.7);
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.9;
+  }
+  70% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(-140px) scale(1.2);
+    opacity: 0;
+  }
+}
+
+.animate-beam-sweep {
+  animation: beam-sweep 14s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-spin-shape {
+  animation: spin-shape 35s linear infinite;
+}
+
+.animate-particle-1 {
+  animation: float-particle 8s ease-in-out infinite;
+}
+.animate-particle-2 {
+  animation: float-particle 12s ease-in-out infinite 2.5s;
+}
+.animate-particle-3 {
+  animation: float-particle 10s ease-in-out infinite 4.5s;
+}
+
+/* Background Grid Mesh Overlay */
+.bg-grid-mesh {
+  background-image: radial-gradient(rgba(100, 116, 139, 0.14) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+[data-theme="dark"] .bg-grid-mesh {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
 }

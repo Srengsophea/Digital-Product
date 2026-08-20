@@ -43,11 +43,17 @@ export function ProductCard({
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
         <div className="img-scrim absolute inset-0" />
-        <span className="absolute left-3 top-3 rounded-full border border-white/15 bg-black/40 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-white backdrop-blur-md">
+        <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full border border-slate-200/80 bg-white/95 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-slate-800 backdrop-blur-md shadow-xs dark:border-white/15 dark:bg-slate-900/80 dark:text-white">
+          <svg className="h-3 w-3 text-violet-600 animate-spin-slow dark:text-violet-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+          </svg>
           {product.category.name}
         </span>
         {product.featured === 1 && (
-          <span className="absolute right-3 top-3 rounded-full bg-gradient-to-r from-violet-500 to-cyan-400 px-3 py-1 text-[11px] font-bold text-white shadow-lg shadow-violet-500/40">
+          <span className="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-violet-600 via-pink-500 to-cyan-500 px-3 py-1 text-[11px] font-bold text-white shadow-lg shadow-violet-500/40">
+            <svg className="h-3 w-3 fill-white animate-pulse" viewBox="0 0 24 24">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+            </svg>
             Featured
           </span>
         )}
@@ -67,8 +73,11 @@ export function ProductCard({
             {formatMoney(product.price_cents)}
           </span>
           <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-violet-700 transition-all group-hover:gap-2.5 group-hover:text-violet-800 dark:text-violet-300 dark:group-hover:text-cyan-300">
-            <Check size={14} className="text-emerald-600 dark:text-emerald-400" />
-            Instant
+            <svg className="h-4 w-4 text-emerald-600 dark:text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              <path d="M9 12l2 2 4-4" />
+            </svg>
+            Instant Delivery
             <ArrowRight size={15} />
           </span>
         </div>
