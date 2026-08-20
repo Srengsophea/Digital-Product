@@ -45,13 +45,13 @@ export function Navbar({
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Logo />
 
-        {/* Desktop nav */}
-        <div className="hidden items-center gap-1 md:flex">
+        {/* Desktop nav links */}
+        <div className="hidden items-center gap-1 lg:flex">
           {links.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className={`rounded-full px-3.5 py-1.5 text-sm transition-all ${
+              className={`rounded-full px-3.5 py-1.5 text-sm transition-all whitespace-nowrap ${
                 isActive(link.href)
                   ? "bg-violet-600 text-white font-bold shadow-md shadow-violet-500/20"
                   : "text-slate-800 font-bold hover:bg-slate-200/80 hover:text-slate-950 dark:text-slate-200 dark:hover:bg-white/10 dark:hover:text-white"
@@ -62,7 +62,7 @@ export function Navbar({
           ))}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <ThemeToggle />
           <CartButton />
 
@@ -71,7 +71,7 @@ export function Navbar({
             <>
               <Link
                 href={user.role === "admin" ? "/admin" : "/account"}
-                className="hidden rounded-full border border-slate-300 bg-slate-100 px-4 py-1.5 text-sm font-bold text-slate-900 transition-colors hover:border-violet-500 hover:bg-slate-200 md:inline-flex dark:border-white/10 dark:bg-white/5 dark:text-white"
+                className="hidden rounded-full border border-slate-300 bg-slate-100 px-4 py-1.5 text-sm font-bold text-slate-900 transition-colors hover:border-violet-500 hover:bg-slate-200 lg:inline-flex whitespace-nowrap dark:border-white/10 dark:bg-white/5 dark:text-white"
               >
                 {user.name.split(" ")[0]}
               </Link>
@@ -79,7 +79,7 @@ export function Navbar({
                 onClick={handleLogout}
                 title="Sign out"
                 aria-label="Sign out"
-                className="hidden h-9 w-9 items-center justify-center rounded-full border border-slate-300 bg-slate-100 text-slate-800 transition-colors hover:border-red-400 hover:bg-red-50 hover:text-red-600 md:inline-flex dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:text-red-400"
+                className="hidden h-9 w-9 items-center justify-center rounded-full border border-slate-300 bg-slate-100 text-slate-800 transition-colors hover:border-red-400 hover:bg-red-50 hover:text-red-600 lg:inline-flex dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:text-red-400"
               >
                 <LogOut size={15} />
               </button>
@@ -88,23 +88,23 @@ export function Navbar({
             <>
               <Link
                 href="/login"
-                className="hidden rounded-full px-3.5 py-1.5 text-sm font-bold text-slate-900 transition-colors hover:text-violet-700 md:inline-flex dark:text-slate-200 dark:hover:text-white"
+                className="hidden rounded-full px-3.5 py-1.5 text-sm font-bold text-slate-900 transition-colors hover:text-violet-700 lg:inline-flex whitespace-nowrap dark:text-slate-200 dark:hover:text-white"
               >
                 Sign in
               </Link>
               <Link
                 href="/register"
-                className="hidden rounded-full bg-gradient-to-r from-violet-600 to-indigo-600 px-4.5 py-2 text-sm font-semibold text-white shadow-md shadow-violet-600/25 transition-transform hover:-translate-y-0.5 md:inline-flex"
+                className="hidden rounded-full bg-gradient-to-r from-violet-600 to-indigo-600 px-4.5 py-2 text-sm font-semibold text-white shadow-md shadow-violet-600/25 transition-transform hover:-translate-y-0.5 lg:inline-flex whitespace-nowrap"
               >
                 Get Started
               </Link>
             </>
           )}
 
-          {/* Mobile Menu Toggle Button */}
+          {/* Mobile/Tablet Menu Toggle Button */}
           <button
             onClick={() => setOpen(!open)}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-300 bg-white/80 text-slate-900 shadow-sm transition-all md:hidden dark:border-white/15 dark:bg-slate-900/80 dark:text-white"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-300 bg-white/80 text-slate-900 shadow-sm transition-all lg:hidden dark:border-white/15 dark:bg-slate-900/80 dark:text-white"
             aria-label={open ? "Close menu" : "Open menu"}
           >
             {open ? <X size={20} /> : <Menu size={20} />}
@@ -114,7 +114,7 @@ export function Navbar({
 
       {/* Mobile drawer menu */}
       {open && (
-        <div className="nav-blur border-b border-slate-200/80 bg-white/95 px-5 pb-6 pt-3 shadow-2xl backdrop-blur-xl md:hidden dark:border-white/10 dark:bg-slate-950/95">
+        <div className="nav-blur border-b border-slate-200/80 bg-white/95 px-5 pb-6 pt-3 shadow-2xl backdrop-blur-xl lg:hidden dark:border-white/10 dark:bg-slate-950/95">
           <div className="flex flex-col gap-1.5">
             {links.map((link) => (
               <Link

@@ -4,11 +4,11 @@ export function Logo({ className = "" }: { className?: string }) {
   return (
     <Link
       href="/"
-      className={`group flex items-center gap-2.5 ${className}`}
+      className={`group flex items-center gap-2.5 shrink-0 ${className}`}
       aria-label="DIGI VIP home"
     >
       {/* Animated SVG Diamond Crystal Icon */}
-      <span className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 via-indigo-600 to-cyan-400 p-0.5 shadow-lg shadow-violet-500/30 transition-all duration-300 group-hover:scale-110 group-hover:shadow-violet-500/50">
+      <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 via-indigo-600 to-cyan-400 p-0.5 shadow-lg shadow-violet-500/30 transition-all duration-300 group-hover:scale-110 group-hover:shadow-violet-500/50">
         <span className="absolute inset-0 rounded-xl bg-gradient-to-br from-violet-600 via-pink-500 to-cyan-400 opacity-60 blur-md transition-opacity duration-300 group-hover:opacity-100 animate-pulse" />
         <span className="relative flex h-full w-full items-center justify-center rounded-[10px] bg-slate-950/90 backdrop-blur-xs">
           <svg
@@ -47,11 +47,11 @@ export function Logo({ className = "" }: { className?: string }) {
         </span>
       </span>
 
-      <span className="flex flex-col leading-none">
+      <span className="flex flex-col leading-none whitespace-nowrap">
         <span className="font-display text-lg font-bold tracking-tight text-slate-900 dark:text-white">
           DIGI<span className="text-gradient"> VIP</span>
         </span>
-        <span className="hidden text-[10px] font-bold uppercase tracking-[0.22em] text-slate-600 lg:block dark:text-slate-400">
+        <span className="hidden text-[10px] font-bold uppercase tracking-[0.22em] text-slate-600 xl:block dark:text-slate-400">
           Digital Marketplace
         </span>
       </span>
