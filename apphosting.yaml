@@ -1,0 +1,15 @@
+# Firebase App Hosting Configuration for Next.js App Router
+# See documentation: https://firebase.google.com/docs/app-hosting
+
+env:
+  - variable: NODE_ENV
+    value: production
+  - variable: NEXT_PUBLIC_APP_URL
+    value: https://${HOSTING_DEFAULT_DOMAIN}
+
+runConfig:
+  minInstances: 0
+  maxInstances: 10
+  concurrency: 80
+  cpu: 1
+  memoryMiB: 512
