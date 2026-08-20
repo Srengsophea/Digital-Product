@@ -1,4 +1,5 @@
 import { db } from "./db";
+import { firestoreDb } from "./firebase-admin";
 
 export interface PendingVerification {
   email: string;
@@ -8,7 +9,9 @@ export interface PendingVerification {
   expiresAt: number; // timestamp in ms
 }
 
-// In-memory store fallback (useful for serverless or rapid verification)
+const VERIFICATION_COLLECTION = "verification_codes";
+
+// In-memory store fallback (useful for local development or fast lookups)
 const memoryStore = new Map<string, PendingVerification>();
 
 // Ensure table exists in SQLite
@@ -27,7 +30,7 @@ try {
   // Read-only filesystem fallback
 }
 
-export function savePendingVerification({
+export async function savePendingVerification({
   email,
   code,
   name,
@@ -68,18 +71,25 @@ export function savePendingVerification({
   } catch {
     // Database fallback
   }
+
+  // 3. Save in Cloud Firestore (for serverless persistence)
+  try {
+    await firestoreDb.collection(VERIFICATION_COLLECTION).doc(normalizedEmail).set(entry);
+  } catch {
+    // Firestore fallback
+  }
 }
 
-export function getPendingVerification(email: string): PendingVerification | null {
+export async function getPendingVerification(email: string): Promise<PendingVerification | null> {
   const normalizedEmail = email.toLowerCase().trim();
 
-  // Check memory store first
+  // 1. Check memory store first
   const memEntry = memoryStore.get(normalizedEmail);
   if (memEntry && memEntry.expiresAt > Date.now()) {
     return memEntry;
   }
 
-  // Check database table
+  // 2. Check SQLite
   try {
     const row = db
       .prepare("SELECT * FROM verification_codes WHERE email = ?")
@@ -106,15 +116,31 @@ export function getPendingVerification(email: string): PendingVerification | nul
     // Database fallback
   }
 
+  // 3. Check Cloud Firestore
+  try {
+    const doc = await firestoreDb.collection(VERIFICATION_COLLECTION).doc(normalizedEmail).get();
+    if (doc.exists) {
+      const data = doc.data() as PendingVerification;
+      if (data && data.expiresAt > Date.now()) {
+        return data;
+      }
+    }
+  } catch {
+    // Firestore fallback
+  }
+
   return null;
 }
 
-export function deletePendingVerification(email: string) {
+export async function deletePendingVerification(email: string) {
   const normalizedEmail = email.toLowerCase().trim();
   memoryStore.delete(normalizedEmail);
+
   try {
     db.prepare("DELETE FROM verification_codes WHERE email = ?").run(normalizedEmail);
-  } catch {
-    // Database fallback
-  }
+  } catch {}
+
+  try {
+    await firestoreDb.collection(VERIFICATION_COLLECTION).doc(normalizedEmail).delete();
+  } catch {}
 }

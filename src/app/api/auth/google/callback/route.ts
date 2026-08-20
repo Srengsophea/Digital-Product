@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { db, type UserRow } from "@/lib/db";
-import { createSession } from "@/lib/auth";
+import { type UserRow } from "@/lib/db";
+import { createSession, getUserByEmail, saveUser } from "@/lib/auth";
 
 function getBaseUrl(req: Request): string {
   const host = req.headers.get("x-forwarded-host") || req.headers.get("host");
@@ -73,29 +73,20 @@ export async function GET(req: Request) {
     const isUserAdmin = adminEmail ? email === adminEmail : false;
     const initialRole = isUserAdmin ? "admin" : "user";
 
-    // 3. Find or register user in database
-    let user = db
-      .prepare("SELECT * FROM users WHERE email = ?")
-      .get(email) as UserRow | undefined;
+    // 3. Find or register user in persistent database (Firestore + SQLite)
+    let user = await getUserByEmail(email);
 
     if (!user) {
       const id = "usr_g_" + Math.random().toString(36).slice(2, 10);
-      try {
-        db.prepare(
-          "INSERT INTO users (id, email, password_hash, name, role) VALUES (?, ?, ?, ?, ?)"
-        ).run(id, email, "$2a$10$google_oauth_hash", name, initialRole);
-      } catch {
-        // Read-only filesystem fallback (e.g. Vercel serverless environment)
-      }
-
-      user = (db.prepare("SELECT * FROM users WHERE id = ?").get(id) as UserRow) || {
+      user = {
         id,
         email,
         password_hash: "$2a$10$google_oauth_hash",
         name,
-        role: initialRole,
+        role: initialRole as "admin" | "customer",
         created_at: new Date().toISOString(),
       };
+      await saveUser(user);
     }
 
     // 4. Create JWT session token & set cookie

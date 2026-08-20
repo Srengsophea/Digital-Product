@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 import { unauthorized, forbidden } from "next/navigation";
 import { db, type UserRow } from "./db";
+import { firestoreDb, COLLECTIONS } from "./firebase-admin";
 
 const SECRET = new TextEncoder().encode(
   process.env.AUTH_SECRET ?? "digi-vip-dev-secret-change-me"
@@ -26,6 +27,7 @@ export async function verifyPassword(
   password: string,
   hash: string
 ): Promise<boolean> {
+  if (!hash) return false;
   return bcrypt.compare(password, hash);
 }
 
@@ -97,14 +99,94 @@ export async function clearSessionCookie() {
   cookieStore.delete(COOKIE_NAME);
 }
 
+export async function saveUser(user: UserRow): Promise<void> {
+  // 1. Save to SQLite
+  try {
+    db.prepare(`
+      INSERT INTO users (id, email, password_hash, name, role, created_at)
+      VALUES (?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        email = excluded.email,
+        password_hash = excluded.password_hash,
+        name = excluded.name,
+        role = excluded.role
+    `).run(user.id, user.email, user.password_hash, user.name, user.role, user.created_at);
+  } catch {
+    // Read-only filesystem fallback
+  }
+
+  // 2. Save to Cloud Firestore (persisted across all Vercel serverless containers)
+  try {
+    await firestoreDb.collection(COLLECTIONS.USERS).doc(user.id).set(user, { merge: true });
+  } catch (err) {
+    console.error("Failed to save user to Cloud Firestore:", err);
+  }
+}
+
 export async function getUserById(id: string): Promise<UserRow | undefined> {
-  return db.prepare("SELECT * FROM users WHERE id = ?").get(id) as
-    | UserRow
-    | undefined;
+  // 1. Try SQLite first (fast)
+  try {
+    const row = db.prepare("SELECT * FROM users WHERE id = ?").get(id) as
+      | UserRow
+      | undefined;
+    if (row) return row;
+  } catch {
+    // Database fallback
+  }
+
+  // 2. Try Cloud Firestore
+  try {
+    const doc = await firestoreDb.collection(COLLECTIONS.USERS).doc(id).get();
+    if (doc.exists) {
+      const data = doc.data() as UserRow;
+      // Cache in SQLite
+      try {
+        db.prepare(
+          "INSERT OR IGNORE INTO users (id, email, password_hash, name, role, created_at) VALUES (?, ?, ?, ?, ?, ?)"
+        ).run(data.id, data.email, data.password_hash, data.name, data.role, data.created_at);
+      } catch {}
+      return data;
+    }
+  } catch {
+    // Firestore fallback
+  }
+
+  return undefined;
 }
 
 export async function getUserByEmail(email: string): Promise<UserRow | undefined> {
-  return db
-    .prepare("SELECT * FROM users WHERE email = ?")
-    .get(email.toLowerCase()) as UserRow | undefined;
+  const normalizedEmail = email.toLowerCase().trim();
+
+  // 1. Try SQLite first
+  try {
+    const row = db
+      .prepare("SELECT * FROM users WHERE email = ?")
+      .get(normalizedEmail) as UserRow | undefined;
+    if (row) return row;
+  } catch {
+    // Database fallback
+  }
+
+  // 2. Try Cloud Firestore (persisted users across serverless instances)
+  try {
+    const snap = await firestoreDb
+      .collection(COLLECTIONS.USERS)
+      .where("email", "==", normalizedEmail)
+      .limit(1)
+      .get();
+    if (!snap.empty) {
+      const data = snap.docs[0].data() as UserRow;
+      // Cache in SQLite
+      try {
+        db.prepare(
+          "INSERT OR IGNORE INTO users (id, email, password_hash, name, role, created_at) VALUES (?, ?, ?, ?, ?, ?)"
+        ).run(data.id, data.email, data.password_hash, data.name, data.role, data.created_at);
+      } catch {}
+      return data;
+    }
+  } catch {
+    // Firestore fallback
+  }
+
+  return undefined;
 }

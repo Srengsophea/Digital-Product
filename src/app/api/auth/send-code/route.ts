@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { db, initDb } from "@/lib/db";
-import { hashPassword } from "@/lib/auth";
+import { initDb } from "@/lib/db";
+import { hashPassword, getUserByEmail } from "@/lib/auth";
 import { savePendingVerification } from "@/lib/verification";
 import { sendVerificationEmail } from "@/lib/mail";
 
@@ -34,9 +34,7 @@ export async function POST(request: Request) {
 
   // Check if account already exists
   try {
-    const existing = db
-      .prepare("SELECT id FROM users WHERE email = ?")
-      .get(normalizedEmail);
+    const existing = await getUserByEmail(normalizedEmail);
     if (existing) {
       return NextResponse.json(
         { error: "An account with this email already exists. Please sign in instead." },
@@ -44,7 +42,7 @@ export async function POST(request: Request) {
       );
     }
   } catch {
-    // Database fallback
+    // Fallback
   }
 
   // Generate 6-digit verification code
@@ -52,7 +50,7 @@ export async function POST(request: Request) {
   const passwordHash = await hashPassword(password);
 
   // Save pending verification (valid for 10 minutes)
-  savePendingVerification({
+  await savePendingVerification({
     email: normalizedEmail,
     code,
     name,

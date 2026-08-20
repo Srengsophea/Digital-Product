@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { db, initDb } from "@/lib/db";
-import { createSession, setSessionCookie } from "@/lib/auth";
+import { initDb } from "@/lib/db";
+import { createSession, setSessionCookie, saveUser } from "@/lib/auth";
 import { getPendingVerification, deletePendingVerification } from "@/lib/verification";
 import { newId } from "@/lib/utils";
 
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
   const normalizedEmail = email.toLowerCase().trim();
 
   // Retrieve pending verification entry
-  const pending = getPendingVerification(normalizedEmail);
+  const pending = await getPendingVerification(normalizedEmail);
   if (!pending) {
     return NextResponse.json(
       { error: "Verification code expired or not found. Please request a new code." },
@@ -60,16 +60,11 @@ export async function POST(request: Request) {
     created_at: new Date().toISOString(),
   };
 
-  try {
-    db.prepare(
-      "INSERT INTO users (id, email, password_hash, name, role, created_at) VALUES (?, ?, ?, ?, ?, ?)"
-    ).run(user.id, user.email, user.password_hash, user.name, user.role, user.created_at);
-  } catch {
-    // Read-only filesystem fallback
-  }
+  // Persist to Cloud Firestore + SQLite
+  await saveUser(user);
 
   // Clear verification code
-  deletePendingVerification(normalizedEmail);
+  await deletePendingVerification(normalizedEmail);
 
   // Create session and set cookie
   const token = await createSession(user);

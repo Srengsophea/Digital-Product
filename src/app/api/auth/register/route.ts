@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { db, initDb } from "@/lib/db";
-import { hashPassword, createSession, setSessionCookie } from "@/lib/auth";
+import { initDb } from "@/lib/db";
+import { hashPassword, createSession, setSessionCookie, saveUser, getUserByEmail } from "@/lib/auth";
 import { newId } from "@/lib/utils";
 
 initDb();
@@ -29,11 +29,9 @@ export async function POST(request: Request) {
   }
 
   const { name, email, password } = parsed.data;
-  const normalizedEmail = email.toLowerCase();
+  const normalizedEmail = email.toLowerCase().trim();
 
-  const existing = db
-    .prepare("SELECT id FROM users WHERE email = ?")
-    .get(normalizedEmail);
+  const existing = await getUserByEmail(normalizedEmail);
   if (existing) {
     return NextResponse.json(
       { error: "An account with this email already exists" },
@@ -50,13 +48,8 @@ export async function POST(request: Request) {
     created_at: new Date().toISOString(),
   };
 
-  try {
-    db.prepare(
-      "INSERT INTO users (id, email, password_hash, name, role, created_at) VALUES (?, ?, ?, ?, ?, ?)"
-    ).run(user.id, user.email, user.password_hash, user.name, user.role, user.created_at);
-  } catch {
-    // Read-only filesystem fallback on serverless platforms
-  }
+  // Persist to Cloud Firestore + SQLite
+  await saveUser(user);
 
   const token = await createSession(user);
   await setSessionCookie(token);
