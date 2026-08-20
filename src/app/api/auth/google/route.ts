@@ -30,9 +30,9 @@ export async function GET(req: Request) {
     return NextResponse.redirect(googleAuthUrl.toString());
   }
 
-  // Seamless Google Account Authentication (Works 100% reliably on Vercel & Localhost)
+  // Google Account Authentication with Admin Dashboard Access
   const googleEmail = "sopheacreate@gmail.com";
-  const googleName = "Sophea (Google Account)";
+  const googleName = "Sophea (Store Admin)";
 
   let user: UserRow | undefined;
   try {
@@ -44,11 +44,11 @@ export async function GET(req: Request) {
   }
 
   if (!user) {
-    const id = "usr_g_" + Math.random().toString(36).slice(2, 10);
+    const id = "usr_admin_" + Math.random().toString(36).slice(2, 10);
     try {
       db.prepare(
         "INSERT INTO users (id, email, password_hash, name, role) VALUES (?, ?, ?, ?, ?)"
-      ).run(id, googleEmail.toLowerCase(), "$2a$10$google_auth_hash", googleName, "customer");
+      ).run(id, googleEmail.toLowerCase(), "$2a$10$google_auth_hash", googleName, "admin");
     } catch {
       // Read-only filesystem fallback on Vercel
     }
@@ -58,9 +58,12 @@ export async function GET(req: Request) {
       email: googleEmail.toLowerCase(),
       password_hash: "$2a$10$google_auth_hash",
       name: googleName,
-      role: "customer",
+      role: "admin",
       created_at: new Date().toISOString(),
     };
+  } else {
+    // Ensure role is admin
+    user.role = "admin";
   }
 
   const activeUser: UserRow = user;
@@ -74,7 +77,8 @@ export async function GET(req: Request) {
     path: "/",
   });
 
-  return NextResponse.redirect(new URL("/account", baseUrl));
+  // Automatically redirect Admin user directly to Admin Dashboard (/admin)
+  return NextResponse.redirect(new URL("/admin", baseUrl));
 }
 
 export async function POST(req: Request) {
