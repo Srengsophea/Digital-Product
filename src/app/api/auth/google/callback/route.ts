@@ -3,11 +3,18 @@ import { cookies } from "next/headers";
 import { db, type UserRow } from "@/lib/db";
 import { createSession } from "@/lib/auth";
 
+function getBaseUrl(req: Request): string {
+  const host = req.headers.get("x-forwarded-host") || req.headers.get("host");
+  const proto = req.headers.get("x-forwarded-proto") || (host?.includes("localhost") ? "http" : "https");
+  if (host) return `${proto}://${host}`;
+  return process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+}
+
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const code = searchParams.get("code");
   const error = searchParams.get("error");
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const baseUrl = getBaseUrl(req);
 
   if (error || !code) {
     const errorUrl = new URL("/login", baseUrl);

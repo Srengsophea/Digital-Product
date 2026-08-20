@@ -3,8 +3,15 @@ import { cookies } from "next/headers";
 import { db, type UserRow } from "@/lib/db";
 import { createSession } from "@/lib/auth";
 
+function getBaseUrl(req: Request): string {
+  const host = req.headers.get("x-forwarded-host") || req.headers.get("host");
+  const proto = req.headers.get("x-forwarded-proto") || (host?.includes("localhost") ? "http" : "https");
+  if (host) return `${proto}://${host}`;
+  return process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+}
+
 export async function GET(req: Request) {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const baseUrl = getBaseUrl(req);
   const clientId = process.env.GOOGLE_CLIENT_ID;
 
   if (clientId && clientId.trim().length > 10 && clientId !== "your-google-client-id.apps.googleusercontent.com") {
