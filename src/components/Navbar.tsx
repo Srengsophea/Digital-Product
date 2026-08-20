@@ -71,7 +71,7 @@ export function Navbar({
             <>
               <Link
                 href={user.role === "admin" ? "/admin" : "/account"}
-                className="hidden rounded-full border border-slate-300 bg-slate-100 px-4 py-1.5 text-sm font-bold text-slate-900 transition-colors hover:border-violet-500 hover:bg-slate-200 sm:inline-flex dark:border-white/10 dark:bg-white/5 dark:text-white"
+                className="hidden rounded-full border border-slate-300 bg-slate-100 px-4 py-1.5 text-sm font-bold text-slate-900 transition-colors hover:border-violet-500 hover:bg-slate-200 md:inline-flex dark:border-white/10 dark:bg-white/5 dark:text-white"
               >
                 {user.name.split(" ")[0]}
               </Link>
@@ -79,7 +79,7 @@ export function Navbar({
                 onClick={handleLogout}
                 title="Sign out"
                 aria-label="Sign out"
-                className="hidden h-9 w-9 items-center justify-center rounded-full border border-slate-300 bg-slate-100 text-slate-800 transition-colors hover:border-red-400 hover:bg-red-50 hover:text-red-600 sm:inline-flex dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:text-red-400"
+                className="hidden h-9 w-9 items-center justify-center rounded-full border border-slate-300 bg-slate-100 text-slate-800 transition-colors hover:border-red-400 hover:bg-red-50 hover:text-red-600 md:inline-flex dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:text-red-400"
               >
                 <LogOut size={15} />
               </button>
@@ -88,13 +88,13 @@ export function Navbar({
             <>
               <Link
                 href="/login"
-                className="hidden rounded-full px-3.5 py-1.5 text-sm font-bold text-slate-900 transition-colors hover:text-violet-700 sm:inline-flex dark:text-slate-200 dark:hover:text-white"
+                className="hidden rounded-full px-3.5 py-1.5 text-sm font-bold text-slate-900 transition-colors hover:text-violet-700 md:inline-flex dark:text-slate-200 dark:hover:text-white"
               >
                 Sign in
               </Link>
               <Link
                 href="/register"
-                className="hidden rounded-full bg-gradient-to-r from-violet-600 to-indigo-600 px-4.5 py-2 text-sm font-semibold text-white shadow-md shadow-violet-600/25 transition-transform hover:-translate-y-0.5 sm:inline-flex"
+                className="hidden rounded-full bg-gradient-to-r from-violet-600 to-indigo-600 px-4.5 py-2 text-sm font-semibold text-white shadow-md shadow-violet-600/25 transition-transform hover:-translate-y-0.5 md:inline-flex"
               >
                 Get Started
               </Link>

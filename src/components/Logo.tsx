@@ -51,7 +51,7 @@ export function Logo({ className = "" }: { className?: string }) {
         <span className="font-display text-lg font-bold tracking-tight text-slate-900 dark:text-white">
           DIGI<span className="text-gradient"> VIP</span>
         </span>
-        <span className="hidden text-[10px] font-bold uppercase tracking-[0.22em] text-slate-600 sm:block dark:text-slate-400">
+        <span className="hidden text-[10px] font-bold uppercase tracking-[0.22em] text-slate-600 lg:block dark:text-slate-400">
           Digital Marketplace
         </span>
       </span>
