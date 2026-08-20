@@ -67,8 +67,11 @@ export async function GET(req: Request) {
       return NextResponse.redirect(errorUrl);
     }
 
-    const email = googleUser.email.toLowerCase();
+    const email = googleUser.email.toLowerCase().trim();
     const name = googleUser.name || googleUser.email.split("@")[0];
+    const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+    const isUserAdmin = adminEmail ? email === adminEmail : false;
+    const initialRole = isUserAdmin ? "admin" : "user";
 
     // 3. Find or register user in database
     let user = db
@@ -80,7 +83,7 @@ export async function GET(req: Request) {
       try {
         db.prepare(
           "INSERT INTO users (id, email, password_hash, name, role) VALUES (?, ?, ?, ?, ?)"
-        ).run(id, email, "$2a$10$google_oauth_hash", name, "user");
+        ).run(id, email, "$2a$10$google_oauth_hash", name, initialRole);
       } catch {
         // Read-only filesystem fallback (e.g. Vercel serverless environment)
       }
@@ -90,7 +93,7 @@ export async function GET(req: Request) {
         email,
         password_hash: "$2a$10$google_oauth_hash",
         name,
-        role: "user",
+        role: initialRole,
         created_at: new Date().toISOString(),
       };
     }
@@ -106,7 +109,8 @@ export async function GET(req: Request) {
       path: "/",
     });
 
-    return NextResponse.redirect(new URL("/account", baseUrl));
+    const destination = (user.role === "admin" || isUserAdmin) ? "/admin" : "/account";
+    return NextResponse.redirect(new URL(destination, baseUrl));
   } catch (err) {
     const errorUrl = new URL("/login", baseUrl);
     errorUrl.searchParams.set(
