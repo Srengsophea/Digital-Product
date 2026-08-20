@@ -100,26 +100,52 @@ export async function clearSessionCookie() {
 }
 
 export async function saveUser(user: UserRow): Promise<void> {
+  const status = user.status || "active";
+  const userToSave = { ...user, status };
+
   // 1. Save to SQLite
   try {
     db.prepare(`
-      INSERT INTO users (id, email, password_hash, name, role, created_at)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO users (id, email, password_hash, name, role, status, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         email = excluded.email,
         password_hash = excluded.password_hash,
         name = excluded.name,
-        role = excluded.role
-    `).run(user.id, user.email, user.password_hash, user.name, user.role, user.created_at);
+        role = excluded.role,
+        status = excluded.status
+    `).run(
+      userToSave.id,
+      userToSave.email,
+      userToSave.password_hash,
+      userToSave.name,
+      userToSave.role,
+      userToSave.status,
+      userToSave.created_at
+    );
   } catch {
     // Read-only filesystem fallback
   }
 
   // 2. Save to Cloud Firestore (persisted across all Vercel serverless containers)
   try {
-    await firestoreDb.collection(COLLECTIONS.USERS).doc(user.id).set(user, { merge: true });
+    await firestoreDb.collection(COLLECTIONS.USERS).doc(userToSave.id).set(userToSave, { merge: true });
   } catch (err) {
     console.error("Failed to save user to Cloud Firestore:", err);
+  }
+}
+
+export async function deleteUser(id: string): Promise<void> {
+  // 1. Delete from SQLite
+  try {
+    db.prepare("DELETE FROM users WHERE id = ?").run(id);
+  } catch {}
+
+  // 2. Delete from Cloud Firestore
+  try {
+    await firestoreDb.collection(COLLECTIONS.USERS).doc(id).delete();
+  } catch (err) {
+    console.error("Failed to delete user from Cloud Firestore:", err);
   }
 }
 
@@ -142,8 +168,8 @@ export async function getUserById(id: string): Promise<UserRow | undefined> {
       // Cache in SQLite
       try {
         db.prepare(
-          "INSERT OR IGNORE INTO users (id, email, password_hash, name, role, created_at) VALUES (?, ?, ?, ?, ?, ?)"
-        ).run(data.id, data.email, data.password_hash, data.name, data.role, data.created_at);
+          "INSERT OR IGNORE INTO users (id, email, password_hash, name, role, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)"
+        ).run(data.id, data.email, data.password_hash, data.name, data.role, data.status || "active", data.created_at);
       } catch {}
       return data;
     }
@@ -179,8 +205,8 @@ export async function getUserByEmail(email: string): Promise<UserRow | undefined
       // Cache in SQLite
       try {
         db.prepare(
-          "INSERT OR IGNORE INTO users (id, email, password_hash, name, role, created_at) VALUES (?, ?, ?, ?, ?, ?)"
-        ).run(data.id, data.email, data.password_hash, data.name, data.role, data.created_at);
+          "INSERT OR IGNORE INTO users (id, email, password_hash, name, role, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)"
+        ).run(data.id, data.email, data.password_hash, data.name, data.role, data.status || "active", data.created_at);
       } catch {}
       return data;
     }

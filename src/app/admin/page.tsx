@@ -110,7 +110,7 @@ async function AdminPage({
 
   const usersList = db
     .prepare(
-      `SELECT u.id, u.email, u.name, u.role, u.created_at,
+      `SELECT u.id, u.email, u.name, u.role, u.status, u.created_at,
               COUNT(o.id) AS order_count,
               COALESCE(SUM(o.total_cents), 0) AS total_spent_cents
        FROM users u

@@ -24,6 +24,7 @@ try {
 }
 
 export type UserRole = "admin" | "customer";
+export type UserStatus = "active" | "banned";
 
 export interface UserRow {
   id: string;
@@ -31,6 +32,7 @@ export interface UserRow {
   password_hash: string;
   name: string;
   role: UserRole;
+  status?: UserStatus;
   created_at: string;
 }
 
@@ -91,9 +93,18 @@ export function initDb() {
         password_hash TEXT NOT NULL,
         name TEXT NOT NULL,
         role TEXT NOT NULL DEFAULT 'customer',
+        status TEXT NOT NULL DEFAULT 'active',
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
       );
+    `);
 
+    try {
+      db.exec(`ALTER TABLE users ADD COLUMN status TEXT NOT NULL DEFAULT 'active';`);
+    } catch {
+      // Column may already exist
+    }
+
+    db.exec(`
       CREATE TABLE IF NOT EXISTS categories (
         id TEXT PRIMARY KEY,
         slug TEXT NOT NULL UNIQUE,

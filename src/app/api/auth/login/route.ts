@@ -41,6 +41,13 @@ export async function POST(request: Request) {
     );
   }
 
+  if (user.status === "banned") {
+    return NextResponse.json(
+      { error: "Your account has been suspended by an administrator. Please contact support." },
+      { status: 403 }
+    );
+  }
+
   const token = await createSession(user);
   await setSessionCookie(token);
 

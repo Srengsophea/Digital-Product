@@ -9,12 +9,20 @@ export interface PendingVerification {
   expiresAt: number; // timestamp in ms
 }
 
+export interface PasswordResetEntry {
+  email: string;
+  code: string;
+  expiresAt: number;
+}
+
 const VERIFICATION_COLLECTION = "verification_codes";
+const PASSWORD_RESET_COLLECTION = "password_resets";
 
 // In-memory store fallback (useful for local development or fast lookups)
 const memoryStore = new Map<string, PendingVerification>();
+const resetMemoryStore = new Map<string, PasswordResetEntry>();
 
-// Ensure table exists in SQLite
+// Ensure tables exist in SQLite
 try {
   db.exec(`
     CREATE TABLE IF NOT EXISTS verification_codes (
@@ -22,6 +30,13 @@ try {
       code TEXT NOT NULL,
       name TEXT NOT NULL,
       password_hash TEXT NOT NULL,
+      expires_at INTEGER NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS password_resets (
+      email TEXT PRIMARY KEY,
+      code TEXT NOT NULL,
       expires_at INTEGER NOT NULL,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
@@ -142,5 +157,94 @@ export async function deletePendingVerification(email: string) {
 
   try {
     await firestoreDb.collection(VERIFICATION_COLLECTION).doc(normalizedEmail).delete();
+  } catch {}
+}
+
+// ==========================================
+// PASSWORD RESET CODE STORAGE & VERIFICATION
+// ==========================================
+
+export async function savePasswordResetCode({
+  email,
+  code,
+  ttlMinutes = 10,
+}: {
+  email: string;
+  code: string;
+  ttlMinutes?: number;
+}) {
+  const normalizedEmail = email.toLowerCase().trim();
+  const expiresAt = Date.now() + ttlMinutes * 60 * 1000;
+
+  const entry: PasswordResetEntry = {
+    email: normalizedEmail,
+    code,
+    expiresAt,
+  };
+
+  // 1. Memory store
+  resetMemoryStore.set(normalizedEmail, entry);
+
+  // 2. SQLite
+  try {
+    db.prepare(`
+      INSERT INTO password_resets (email, code, expires_at)
+      VALUES (?, ?, ?)
+      ON CONFLICT(email) DO UPDATE SET
+        code = excluded.code,
+        expires_at = excluded.expires_at
+    `).run(normalizedEmail, code, expiresAt);
+  } catch {}
+
+  // 3. Cloud Firestore
+  try {
+    await firestoreDb.collection(PASSWORD_RESET_COLLECTION).doc(normalizedEmail).set(entry);
+  } catch {}
+}
+
+export async function getPasswordResetCode(email: string): Promise<PasswordResetEntry | null> {
+  const normalizedEmail = email.toLowerCase().trim();
+
+  // 1. Memory store
+  const mem = resetMemoryStore.get(normalizedEmail);
+  if (mem && mem.expiresAt > Date.now()) {
+    return mem;
+  }
+
+  // 2. SQLite
+  try {
+    const row = db
+      .prepare("SELECT * FROM password_resets WHERE email = ?")
+      .get(normalizedEmail) as PasswordResetEntry | undefined;
+
+    if (row && row.expiresAt > Date.now()) {
+      return row;
+    }
+  } catch {}
+
+  // 3. Cloud Firestore
+  try {
+    const doc = await firestoreDb.collection(PASSWORD_RESET_COLLECTION).doc(normalizedEmail).get();
+    if (doc.exists) {
+      const data = doc.data() as PasswordResetEntry;
+      if (data && data.expiresAt > Date.now()) {
+        return data;
+      }
+    }
+  } catch {}
+
+  return null;
+}
+
+export async function deletePasswordResetCode(email: string) {
+  const normalizedEmail = email.toLowerCase().trim();
+  resetMemoryStore.delete(normalizedEmail);
+
+  try {
+    db.prepare("DELETE FROM password_resets WHERE email = ?").run(normalizedEmail);
+  } catch {}
+
+  try {
+    await firestoreDb.collection(PASSWORD_RESET_COLLECTION).doc(normalizedEmail).delete();
   } catch {}
 }
