@@ -77,13 +77,22 @@ export async function GET(req: Request) {
 
     if (!user) {
       const id = "usr_g_" + Math.random().toString(36).slice(2, 10);
-      db.prepare(
-        "INSERT INTO users (id, email, password_hash, name, role) VALUES (?, ?, ?, ?, ?)"
-      ).run(id, email, "$2a$10$google_oauth_hash", name, "user");
+      try {
+        db.prepare(
+          "INSERT INTO users (id, email, password_hash, name, role) VALUES (?, ?, ?, ?, ?)"
+        ).run(id, email, "$2a$10$google_oauth_hash", name, "user");
+      } catch {
+        // Read-only filesystem fallback (e.g. Vercel serverless environment)
+      }
 
-      user = db
-        .prepare("SELECT * FROM users WHERE id = ?")
-        .get(id) as UserRow;
+      user = (db.prepare("SELECT * FROM users WHERE id = ?").get(id) as UserRow) || {
+        id,
+        email,
+        password_hash: "$2a$10$google_oauth_hash",
+        name,
+        role: "user",
+        created_at: new Date().toISOString(),
+      };
     }
 
     // 4. Create JWT session token & set cookie

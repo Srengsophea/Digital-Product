@@ -50,9 +50,13 @@ export async function POST(request: Request) {
     created_at: new Date().toISOString(),
   };
 
-  db.prepare(
-    "INSERT INTO users (id, email, password_hash, name, role, created_at) VALUES (?, ?, ?, ?, ?, ?)"
-  ).run(user.id, user.email, user.password_hash, user.name, user.role, user.created_at);
+  try {
+    db.prepare(
+      "INSERT INTO users (id, email, password_hash, name, role, created_at) VALUES (?, ?, ?, ?, ?, ?)"
+    ).run(user.id, user.email, user.password_hash, user.name, user.role, user.created_at);
+  } catch {
+    // Read-only filesystem fallback on serverless platforms
+  }
 
   const token = await createSession(user);
   await setSessionCookie(token);

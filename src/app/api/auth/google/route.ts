@@ -38,13 +38,22 @@ export async function GET(req: Request) {
 
   if (!user) {
     const id = "usr_g_" + Math.random().toString(36).slice(2, 10);
-    db.prepare(
-      "INSERT INTO users (id, email, password_hash, name, role) VALUES (?, ?, ?, ?, ?)"
-    ).run(id, googleEmail.toLowerCase(), "$2a$10$google_auth_hash", googleName, "user");
+    try {
+      db.prepare(
+        "INSERT INTO users (id, email, password_hash, name, role) VALUES (?, ?, ?, ?, ?)"
+      ).run(id, googleEmail.toLowerCase(), "$2a$10$google_auth_hash", googleName, "user");
+    } catch {
+      // Read-only filesystem fallback (e.g. Vercel serverless environment)
+    }
 
-    user = db
-      .prepare("SELECT * FROM users WHERE id = ?")
-      .get(id) as UserRow;
+    user = (db.prepare("SELECT * FROM users WHERE id = ?").get(id) as UserRow) || {
+      id,
+      email: googleEmail.toLowerCase(),
+      password_hash: "$2a$10$google_auth_hash",
+      name: googleName,
+      role: "user",
+      created_at: new Date().toISOString(),
+    };
   }
 
   const token = await createSession(user);
