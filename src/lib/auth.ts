@@ -30,10 +30,14 @@ export async function verifyPassword(
 }
 
 export async function createSession(user: UserRow): Promise<string> {
+  const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+  const isEnvAdmin = adminEmail && user.email.trim().toLowerCase() === adminEmail;
+  const role = isEnvAdmin ? "admin" : user.role;
+
   return new SignJWT({
     email: user.email,
     name: user.name,
-    role: user.role,
+    role,
   })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(user.id)

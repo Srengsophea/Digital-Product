@@ -48,11 +48,6 @@ function LoginForm() {
     }
   };
 
-  const fillDemo = () => {
-    setEmail("demo@digivip.io");
-    setPassword("demo123");
-  };
-
   const handleGoogleSignIn = () => {
     setLoading(true);
     window.location.href = "/api/auth/google";
@@ -148,14 +143,6 @@ function LoginForm() {
             >
               {loading ? <Loader2 size={18} className="animate-spin" /> : <KeyRound size={17} />}
               {loading ? "Signing in…" : "Sign in"}
-            </button>
-
-            <button
-              type="button"
-              onClick={fillDemo}
-              className="btn-ghost mt-3 w-full text-xs text-text-muted hover:text-violet-600 dark:hover:text-violet-300"
-            >
-              Use demo account (demo@digivip.io)
             </button>
           </form>
         </div>
