@@ -71,22 +71,22 @@ function HomePage() {
               Premium digital marketplace
             </span>
 
-            <h1 className="animate-fade-up-delay-1 mt-6 font-display text-5xl font-bold leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl">
+            <h1 className="animate-fade-up-delay-1 mt-6 font-display text-3xl font-extrabold leading-[1.1] tracking-tight xs:text-4xl sm:text-6xl lg:text-7xl">
               The <span className="text-gradient">VIP lounge</span> for
               <br className="hidden sm:block" /> digital products
             </h1>
 
-            <p className="animate-fade-up-delay-2 mx-auto mt-6 max-w-2xl text-lg leading-8 text-text-muted">
+            <p className="animate-fade-up-delay-2 mx-auto mt-6 max-w-2xl text-base leading-7 text-text-muted sm:text-lg sm:leading-8">
               Hand-picked software, design assets, courses and templates from
               the world&apos;s best independent creators — delivered instantly
               with secure license keys.
             </p>
 
-            <div className="animate-fade-up-delay-3 mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <Link href="/products" className="btn-primary text-base">
+            <div className="animate-fade-up-delay-3 mt-8 flex flex-col items-center justify-center gap-3.5 sm:mt-10 sm:flex-row sm:gap-4">
+              <Link href="/products" className="btn-primary w-full text-base sm:w-auto">
                 Explore the catalog <ArrowRight size={18} />
               </Link>
-              <Link href="/register" className="btn-secondary text-base !text-slate-900 font-bold hover:!text-violet-700 dark:!text-white">
+              <Link href="/register" className="btn-secondary w-full text-base !text-slate-900 font-bold hover:!text-violet-700 sm:w-auto dark:!text-white">
                 Create free account
               </Link>
             </div>
